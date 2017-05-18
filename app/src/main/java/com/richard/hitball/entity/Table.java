@@ -13,6 +13,7 @@ public class Table {
     private static final int BOUNDARY_HIT_RIGHT = 2;
     private static final int BOUNDARY_HIT_LEFT = 4;
     private Ball mBall;
+    private Bat mBat;
     private Paint mPaint;
     private Rect mBoundary;
     private Path mBoundaryPath;
@@ -36,20 +37,31 @@ public class Table {
         mBall = ball;
     }
 
+    public void setBat(Bat bat) {
+        mBat = bat;
+        int left = mBoundary.centerX() - Bat.DEFAULT_WIDTH / 2;
+        int top = mBoundary.bottom - Bat.DEFAULT_HEIGHT;
+        int right = mBoundary.centerX() + Bat.DEFAULT_WIDTH / 2;
+        int bottom = mBoundary.bottom;
+        Rect body = new Rect(left, top, right, bottom);
+        bat.setBodyPosition(body);
+    }
+
     public Ball getBall() {
         return mBall;
     }
-    
+
     public void draw(Canvas canvas) {
         canvas.drawPath(mBoundaryPath, mPaint);
         int hitType = getBoundaryHitType();
         if ((hitType & BOUNDARY_HIT_TOP) == BOUNDARY_HIT_TOP) {
             mBall.reverseYSpeed();
         }
-        if ((hitType & (BOUNDARY_HIT_LEFT|BOUNDARY_HIT_RIGHT)) > 0) {
+        if ((hitType & (BOUNDARY_HIT_LEFT | BOUNDARY_HIT_RIGHT)) > 0) {
             mBall.reverseXSpeed();
         }
         mBall.draw(canvas);
+        mBat.draw(canvas);
     }
 
     private int getBoundaryHitType() {

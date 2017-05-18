@@ -11,6 +11,7 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.richard.hitball.entity.Ball;
+import com.richard.hitball.entity.Bat;
 import com.richard.hitball.entity.Table;
 
 
@@ -22,6 +23,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
 
     private Table mTable;
     private Ball mBall;
+    private Bat mBat;
 
     private boolean mIsRunning;
 
@@ -35,6 +37,9 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         mTable = new Table(screenRect);
         mBall = new Ball();
         mTable.setBall(mBall);
+        mBat = new Bat();
+        mTable.setBat(mBat);
+
         mBall.setPosition(0, 600);
         mBall.shot(10, -20);
     }
