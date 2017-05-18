@@ -4,11 +4,13 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.richard.hitball.entity.Ball;
+import com.richard.hitball.entity.Table;
 
 
 public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Callback {
@@ -17,16 +19,14 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     public static int STAGE_BIRD_FALLING = 3;
     public static int STAGE_OVER = 4;
 
+    private Table mTable;
     private Ball mBall;
 
-    private Paint mPaint;
     private boolean mIsRunning;
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mPaint = new Paint();
-        mPaint.setStrokeWidth(6);
-        mPaint.setColor(Color.RED);
+
 
         getHolder().addCallback(this);
     }
@@ -34,7 +34,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        mBall.draw(canvas);
+        mTable.draw(canvas);
     }
 
     @Override
@@ -58,8 +58,11 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         mIsRunning = true;
-        mBall = new Ball(mPaint);
-        mBall.shot(10, 20);
+        mBall = new Ball();
+        mTable = new Table(new Rect(10, 10, 300, 600));
+        mTable.setBall(mBall);
+        mBall.setPosition(0, 600);
+        mBall.shot(5, -10);
         new Thread(this).start();
     }
 
