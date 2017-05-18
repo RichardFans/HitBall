@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
 
 import com.richard.hitball.entity.Ball;
 import com.richard.hitball.entity.Table;
@@ -26,9 +27,16 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-
         getHolder().addCallback(this);
+
+        WindowManager windowManager = (WindowManager) context.getSystemService(context.WINDOW_SERVICE);
+        Rect screenRect = new Rect();
+        windowManager.getDefaultDisplay().getRectSize(screenRect);
+        mTable = new Table(screenRect);
+        mBall = new Ball();
+        mTable.setBall(mBall);
+        mBall.setPosition(0, 600);
+        mBall.shot(10, -20);
     }
 
     @Override
@@ -58,11 +66,6 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         mIsRunning = true;
-        mBall = new Ball();
-        mTable = new Table(new Rect(10, 10, 300, 600));
-        mTable.setBall(mBall);
-        mBall.setPosition(0, 600);
-        mBall.shot(5, -10);
         new Thread(this).start();
     }
 
