@@ -71,10 +71,25 @@ public class Table {
         if ((hitType & (BOUNDARY_HIT_LEFT | BOUNDARY_HIT_RIGHT)) > 0) {
             mBall.reverseXSpeed();
         }
+        if (isBatHit()) {
+            mBall.reverseYSpeed();
+        }
         mBall.draw(canvas);
 
         moveBat();
         mBat.draw(canvas);
+    }
+
+    private boolean isBatHit() {
+        Point c = mBall.getCenter();
+        float r = mBall.getRadius();
+        Rect batBody = mBat.getBody();
+        if (c.x >= batBody.left && c.x <= batBody.right) {
+            if (c.y < batBody.top && c.y + r > batBody.top) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int getBoundaryHitType() {
