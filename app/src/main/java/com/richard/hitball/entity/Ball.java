@@ -68,4 +68,9 @@ public class Ball {
         mCenter.x = x;
         mCenter.y = y;
     }
+
+    public void stop() {
+        mSpeed.x = 0;
+        mSpeed.y = 0;
+    }
 }

@@ -19,15 +19,22 @@ public class Table {
     private boolean isBatMoving;
     private boolean isBatMoveToLeft;
 
-    private Paint mPaint;
+    private Paint mPaintBoundary, mPaintGameOver;
     private Rect mBoundary;
     private Path mBoundaryPath;
 
+    private boolean mShowGameOver;
+
     public Table(Rect boundary) {
-        mPaint = new Paint();
-        mPaint.setStrokeWidth(6);
-        mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setColor(Color.GREEN);
+        mPaintBoundary = new Paint();
+        mPaintBoundary.setStrokeWidth(6);
+        mPaintBoundary.setStyle(Paint.Style.STROKE);
+        mPaintBoundary.setColor(Color.GREEN);
+
+        mPaintGameOver = new Paint();
+        mPaintGameOver.setStyle(Paint.Style.FILL);
+        mPaintGameOver.setTextSize(78);
+        mPaintGameOver.setColor(Color.RED);
 
         mBoundary = boundary;
 
@@ -44,20 +51,19 @@ public class Table {
 
     public void setBat(Bat bat) {
         mBat = bat;
-        int left = mBoundary.centerX() - Bat.DEFAULT_WIDTH / 2;
-        int top = mBoundary.bottom - Bat.DEFAULT_HEIGHT;
-        int right = mBoundary.centerX() + Bat.DEFAULT_WIDTH / 2;
-        int bottom = mBoundary.bottom;
-        Rect body = new Rect(left, top, right, bottom);
-        bat.setBodyPosition(body);
     }
 
-    public Ball getBall() {
-        return mBall;
+    public void showGameOver() {
+        mShowGameOver = true;
+        mBall.stop();
     }
 
     public void draw(Canvas canvas) {
-        canvas.drawPath(mBoundaryPath, mPaint);
+        if (mShowGameOver) {
+            canvas.drawText("Game Over!", mBoundary.centerX() - 218, mBoundary.centerY(), mPaintGameOver);
+        }
+
+        canvas.drawPath(mBoundaryPath, mPaintBoundary);
         int hitType = getBoundaryHitType();
         if ((hitType & BOUNDARY_HIT_TOP) == BOUNDARY_HIT_TOP) {
             mBall.reverseYSpeed();
@@ -110,5 +116,26 @@ public class Table {
 
     public void stopBatMove() {
         isBatMoving = false;
+    }
+
+    public void reset() {
+        int left = mBoundary.centerX() - Bat.DEFAULT_WIDTH / 2;
+        int top = mBoundary.bottom - Bat.DEFAULT_HEIGHT;
+        int right = mBoundary.centerX() + Bat.DEFAULT_WIDTH / 2;
+        int bottom = mBoundary.bottom;
+        Rect body = new Rect(left, top, right, bottom);
+        mBat.setBodyPosition(body);
+        mBall.setPosition(mBoundary.centerX(), (int) (top - mBall.getRadius()));
+        mBall.stop();
+        mShowGameOver = false;
+    }
+
+    public void shotBall() {
+        mBall.shot(20, -20);
+    }
+
+    public boolean isBallOutside() {
+        Point c = mBall.getCenter();
+        return c.y - 100 > mBoundary.bottom;
     }
 }

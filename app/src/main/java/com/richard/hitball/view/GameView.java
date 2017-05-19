@@ -16,32 +16,35 @@ import com.richard.hitball.entity.Table;
 
 
 public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Callback {
-    public static int STAGE_READY = 1;
-    public static int STAGE_PLAY = 2;
-    public static int STAGE_BIRD_FALLING = 3;
-    public static int STAGE_OVER = 4;
+    public static int STATE_READY = 1;
+    public static int STATE_PLAY = 2;
+    public static int STATE_OVER = 4;
+
+    private int mState;
 
     private Table mTable;
     private Ball mBall;
     private Bat mBat;
 
     private boolean mIsRunning;
+    private GestureDetector mGestureDetector;
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
         getHolder().addCallback(this);
+        mGestureDetector = new GestureDetector(getContext(), new GameGestureDetector());
 
         WindowManager windowManager = (WindowManager) context.getSystemService(context.WINDOW_SERVICE);
         Rect screenRect = new Rect();
         windowManager.getDefaultDisplay().getRectSize(screenRect);
+
         mTable = new Table(screenRect);
         mBall = new Ball();
         mTable.setBall(mBall);
         mBat = new Bat();
         mTable.setBat(mBat);
-
-        mBall.setPosition(0, 600);
-        mBall.shot(10, -20);
+        mTable.reset();
+        mState = STATE_READY;
     }
 
     @Override
@@ -49,7 +52,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                if (mIsRunning) {
+                if (mIsRunning && mState == STATE_PLAY) {
                     mTable.startBatMove(event);
                 }
                 break;
@@ -57,6 +60,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
                 mTable.stopBatMove();
                 break;
         }
+        mGestureDetector.onTouchEvent(event);
         return true;
     }
 
@@ -64,6 +68,10 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     public void draw(Canvas canvas) {
         super.draw(canvas);
         mTable.draw(canvas);
+        if (mTable.isBallOutside()) {
+            mState = STATE_OVER;
+            mTable.showGameOver();
+        }
     }
 
     @Override
@@ -72,15 +80,6 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
             Canvas canvas = getHolder().lockCanvas();
             draw(canvas);
             getHolder().unlockCanvasAndPost(canvas);
-//            sleep(20);
-        }
-    }
-
-    private void sleep(int ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -98,5 +97,21 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         mIsRunning = false;
+    }
+
+    private class GameGestureDetector extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            if (mIsRunning) {
+                if (mState == STATE_READY) {
+                    mTable.shotBall();
+                    mState = STATE_PLAY;
+                } else if (mState == STATE_OVER) {
+                    mState = STATE_READY;
+                    mTable.reset();
+                }
+            }
+            return true;
+        }
     }
 }
