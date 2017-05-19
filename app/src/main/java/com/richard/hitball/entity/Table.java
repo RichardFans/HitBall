@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.view.MotionEvent;
 
 public class Table {
     private static final int BOUNDARY_HIT_NONE = 0;
@@ -13,7 +14,11 @@ public class Table {
     private static final int BOUNDARY_HIT_RIGHT = 2;
     private static final int BOUNDARY_HIT_LEFT = 4;
     private Ball mBall;
+
     private Bat mBat;
+    private boolean isBatMoving;
+    private boolean isBatMoveToLeft;
+
     private Paint mPaint;
     private Rect mBoundary;
     private Path mBoundaryPath;
@@ -61,6 +66,8 @@ public class Table {
             mBall.reverseXSpeed();
         }
         mBall.draw(canvas);
+
+        moveBat();
         mBat.draw(canvas);
     }
 
@@ -78,5 +85,30 @@ public class Table {
             type |= BOUNDARY_HIT_LEFT;
         }
         return type;
+    }
+
+    public void moveBat() {
+        if (isBatMoving) {
+            if (isBatMoveToLeft) {
+                if (mBat.getBody().left > mBoundary.left) mBat.moveLeft();
+            } else {
+                if (mBat.getBody().right < mBoundary.right) mBat.moveRight();
+            }
+        }
+    }
+
+    public void startBatMove(MotionEvent e) {
+        if (mBoundary.contains((int) e.getX(), (int) e.getY())) {
+            isBatMoving = true;
+            if (e.getX() > mBoundary.centerX()) { // move right
+                if (mBat.getBody().right < mBoundary.right) isBatMoveToLeft = false;
+            } else {
+                if (mBat.getBody().left > mBoundary.left) isBatMoveToLeft = true;
+            }
+        }
+    }
+
+    public void stopBatMove() {
+        isBatMoving = false;
     }
 }

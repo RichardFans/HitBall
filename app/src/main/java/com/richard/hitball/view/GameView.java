@@ -2,10 +2,10 @@ package com.richard.hitball.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
@@ -42,6 +42,22 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
 
         mBall.setPosition(0, 600);
         mBall.shot(10, -20);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE:
+                if (mIsRunning) {
+                    mTable.startBatMove(event);
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                mTable.stopBatMove();
+                break;
+        }
+        return true;
     }
 
     @Override
