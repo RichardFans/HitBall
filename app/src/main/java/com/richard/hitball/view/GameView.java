@@ -18,6 +18,7 @@ import com.richard.hitball.entity.Table;
 public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Callback {
     public static int STATE_READY = 1;
     public static int STATE_PLAY = 2;
+    public static int STATE_PASS = 3;
     public static int STATE_OVER = 4;
 
     private int mState;
@@ -71,6 +72,9 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         if (mTable.isBallOutside()) {
             mState = STATE_OVER;
             mTable.showGameOver();
+        } else if (mTable.hasNoneBrick()) {
+            mState = STATE_PASS;
+            mTable.showGamePass();
         }
     }
 
@@ -115,7 +119,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
                 if (mState == STATE_READY) {
                     mTable.shotBall();
                     mState = STATE_PLAY;
-                } else if (mState == STATE_OVER) {
+                } else if (mState == STATE_OVER || mState == STATE_PASS) {
                     mState = STATE_READY;
                     mTable.reset();
                 }

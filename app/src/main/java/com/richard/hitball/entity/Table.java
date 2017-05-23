@@ -38,6 +38,7 @@ public class Table {
     private Path mBoundaryPath;
 
     private boolean mShowGameOver;
+    private boolean mShowGamePass;
 
     private Cell[][] mCells;
     private int mCellWidth, mCellHeight;
@@ -111,10 +112,17 @@ public class Table {
         mBall.stop();
     }
 
+    public void showGamePass() {
+        mShowGamePass = true;
+        mBall.stop();
+    }
+
     public void draw(Canvas canvas) {
         canvas.drawColor(Color.LTGRAY);
         if (mShowGameOver) {
             canvas.drawText("Game Over!", mBoundary.centerX() - 218, mBoundary.centerY(), mPaintGameOver);
+        } else if (mShowGamePass) {
+            canvas.drawText("过关了!", mBoundary.centerX() - 168, mBoundary.centerY(), mPaintGameOver);
         }
         // 绘制边界
         canvas.drawPath(mBoundaryPath, mPaintBoundary);
@@ -282,6 +290,7 @@ public class Table {
         mBall.setPosition(mBoundary.centerX(), (int) (top - mBall.getRadius()));
         mBall.stop();
         mShowGameOver = false;
+        mShowGamePass = false;
 
         loadLevel();
     }
@@ -293,5 +302,17 @@ public class Table {
     public boolean isBallOutside() {
         Point c = mBall.getCenter();
         return c.y - 100 > mBoundary.bottom;
+    }
+
+    public boolean hasNoneBrick() {
+        for (int row = 0; row < ROW_NUM; row++) {
+            for (int col = 0; col < COL_NUM; col++) {
+                Cell cell = mCells[row][col];
+                if (cell instanceof Brick) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
