@@ -13,6 +13,7 @@ public class Ball {
     private Paint mPaint;
 
     private Point mCenter;
+
     private float mRadius;
 
     private Point mSpeed;
@@ -47,6 +48,10 @@ public class Ball {
 
     public void reverseXSpeed() {
         mSpeed.x = -mSpeed.x;
+    }
+
+    public void setRadius(float radius) {
+        mRadius = radius;
     }
 
     public Ball() {

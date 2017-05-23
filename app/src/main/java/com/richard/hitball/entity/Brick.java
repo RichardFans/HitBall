@@ -46,4 +46,9 @@ public class Brick extends Cell {
         mBlood--;
         return mBlood < 0;
     }
+
+    @Override
+    public int getBlood() {
+        return mBlood;
+    }
 }

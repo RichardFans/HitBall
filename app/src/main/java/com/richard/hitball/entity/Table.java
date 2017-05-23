@@ -1,12 +1,22 @@
 package com.richard.hitball.entity;
 
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.media.AudioManager;
+import android.media.SoundPool;
+import android.util.Log;
 import android.view.MotionEvent;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Table {
     private static final int HIT_NONE = 0;
@@ -32,7 +42,10 @@ public class Table {
     private Cell[][] mCells;
     private int mCellWidth, mCellHeight;
 
-    public Table(Rect boundary) {
+    private SoundPool mSoundPool;
+    private List<Integer> mSounds = new ArrayList<>();
+
+    public Table(Context context, Rect boundary) {
         mPaintBoundary = new Paint();
         mPaintBoundary.setStrokeWidth(6);
         mPaintBoundary.setStyle(Paint.Style.STROKE);
@@ -50,8 +63,22 @@ public class Table {
         mBoundaryPath.lineTo(boundary.left, boundary.top);
         mBoundaryPath.lineTo(boundary.right, boundary.top);
         mBoundaryPath.lineTo(boundary.right, boundary.bottom);
+        loadSound(context);
+    }
 
-        loadLevel();
+    private void loadSound(Context context) {
+        mSoundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+        AssetManager manager = context.getAssets();
+        try {
+            String[] filenames = manager.list("");
+            for (String filename : filenames) {
+                AssetFileDescriptor fd = manager.openFd(filename);
+                int soundId = mSoundPool.load(fd, 0);
+                mSounds.add(soundId);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadLevel() {
@@ -71,10 +98,12 @@ public class Table {
 
     public void setBall(Ball ball) {
         mBall = ball;
+        mBall.setRadius(mBoundary.width() / 20);
     }
 
     public void setBat(Bat bat) {
         mBat = bat;
+        mBat.setWidth(mBoundary.width() / 3);
     }
 
     public void showGameOver() {
@@ -138,13 +167,15 @@ public class Table {
         Cell cell = null;
         boolean hitCell = false;
         Rect body = null;
+        boolean ballInTable = mBoundary.contains(c.x, c.y);
         // 判断撞头
-        if (row > 0 && row < ROW_NUM) {
+        if (ballInTable && row > 0) {
             cell = mCells[row - 1][col];
             if (cell != null) {
                 body = cell.getBody();
                 hitCell = c.y > body.bottom && c.y - r <= body.bottom;
                 if (hitCell) {
+                    playHitBrickSound(cell);
                     if (cell.hit()) {
                         mCells[cell.row][cell.col] = null;
                     }
@@ -156,12 +187,13 @@ public class Table {
         }
         // 判断撞右边
         hitCell = false;
-        if (col < COL_NUM - 1 && row < ROW_NUM) {
+        if (ballInTable && col < COL_NUM - 1) {
             cell = mCells[row][col + 1];
             if (cell != null) {
                 body = cell.getBody();
                 hitCell = c.x < body.left && c.x + r >= body.left;
                 if (hitCell) {
+                    playHitBrickSound(cell);
                     if (cell.hit()) {
                         mCells[cell.row][cell.col] = null;
                     }
@@ -174,12 +206,13 @@ public class Table {
         }
         // 判断撞左边
         hitCell = false;
-        if (col > 0 && row < ROW_NUM) {
+        if (ballInTable && col > 0) {
             cell = mCells[row][col - 1];
             if (cell != null) {
                 body = cell.getBody();
                 hitCell = c.x > body.right && c.x - r <= body.right;
                 if (hitCell) {
+                    playHitBrickSound(cell);
                     if (cell.hit()) {
                         mCells[cell.row][cell.col] = null;
                     }
@@ -191,12 +224,13 @@ public class Table {
             type |= HIT_LEFT;
         }
         // 判断撞下边
-        if (row < ROW_NUM - 1) {
+        if (ballInTable && row < ROW_NUM - 1) {
             cell = mCells[row + 1][col];
             if (cell != null) {
                 body = cell.getBody();
                 hitCell = c.y < body.top && c.y + r >= body.top;
                 if (hitCell) {
+                    playHitBrickSound(cell);
                     if (cell.hit()) {
                         mCells[cell.row][cell.col] = null;
                     }
@@ -207,6 +241,10 @@ public class Table {
             type |= HIT_BOTTOM;
         }
         return type;
+    }
+
+    private void playHitBrickSound(Cell cell) {
+        mSoundPool.play(mSounds.get(cell.getBlood()), 1f, 1f, 0, 0, 1);
     }
 
     public void moveBat() {
@@ -235,15 +273,17 @@ public class Table {
     }
 
     public void reset() {
-        int left = mBoundary.centerX() - Bat.DEFAULT_WIDTH / 2;
+        int left = mBoundary.centerX() - mBat.getWidth() / 2;
         int top = mBoundary.bottom - Bat.DEFAULT_HEIGHT;
-        int right = mBoundary.centerX() + Bat.DEFAULT_WIDTH / 2;
+        int right = mBoundary.centerX() + mBat.getWidth() / 2;
         int bottom = mBoundary.bottom;
         Rect body = new Rect(left, top, right, bottom);
         mBat.setBodyPosition(body);
         mBall.setPosition(mBoundary.centerX(), (int) (top - mBall.getRadius()));
         mBall.stop();
         mShowGameOver = false;
+
+        loadLevel();
     }
 
     public void shotBall() {

@@ -14,11 +14,13 @@ public class Bat {
     private Paint mPaint;
     private Rect mBody;
     private int mSpeed;
+    private int mWidth;
 
     public Bat() {
         mPaint = new Paint();
         mPaint.setColor(Color.MAGENTA);
         mSpeed = DEFAULT_SPEED;
+        mWidth = DEFAULT_WIDTH;
     }
 
     public void moveLeft() {
@@ -39,5 +41,13 @@ public class Bat {
 
     public Rect getBody() {
         return mBody;
+    }
+
+    public int getWidth() {
+        return mWidth;
+    }
+
+    public void setWidth(int width) {
+        mWidth = width;
     }
 }

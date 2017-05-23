@@ -38,7 +38,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         Rect screenRect = new Rect();
         windowManager.getDefaultDisplay().getRectSize(screenRect);
 
-        mTable = new Table(screenRect);
+        mTable = new Table(context, screenRect);
         mBall = new Ball();
         mTable.setBall(mBall);
         mBat = new Bat();

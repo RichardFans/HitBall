@@ -22,4 +22,6 @@ abstract public class Cell {
     public abstract void draw(Canvas canvas);
 
     public abstract boolean hit();
+
+    public abstract int getBlood();
 }
