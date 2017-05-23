@@ -37,6 +37,10 @@ public class Ball {
         return mSpeed.y < 0;
     }
 
+    public boolean isToBottom() {
+        return mSpeed.y > 0;
+    }
+
     public void reverseYSpeed() {
         mSpeed.y = -mSpeed.y;
     }

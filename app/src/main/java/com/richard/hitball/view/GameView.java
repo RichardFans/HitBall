@@ -80,6 +80,15 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
             Canvas canvas = getHolder().lockCanvas();
             draw(canvas);
             getHolder().unlockCanvasAndPost(canvas);
+            sleep(20);
+        }
+    }
+
+    private void sleep(int ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

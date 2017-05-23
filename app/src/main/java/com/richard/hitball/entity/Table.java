@@ -9,10 +9,14 @@ import android.graphics.Rect;
 import android.view.MotionEvent;
 
 public class Table {
-    private static final int BOUNDARY_HIT_NONE = 0;
-    private static final int BOUNDARY_HIT_TOP = 1;
-    private static final int BOUNDARY_HIT_RIGHT = 2;
-    private static final int BOUNDARY_HIT_LEFT = 4;
+    private static final int HIT_NONE = 0;
+    private static final int HIT_TOP = 1;
+    private static final int HIT_RIGHT = 2;
+    private static final int HIT_BOTTOM = 3;
+    private static final int HIT_LEFT = 4;
+    private static final int ROW_NUM = 20;
+    private static final int COL_NUM = 5;
+    private static final float BRICK_BORDER = 5f;
     private Ball mBall;
 
     private Bat mBat;
@@ -24,6 +28,9 @@ public class Table {
     private Path mBoundaryPath;
 
     private boolean mShowGameOver;
+
+    private Cell[][] mCells;
+    private int mCellWidth, mCellHeight;
 
     public Table(Rect boundary) {
         mPaintBoundary = new Paint();
@@ -43,6 +50,23 @@ public class Table {
         mBoundaryPath.lineTo(boundary.left, boundary.top);
         mBoundaryPath.lineTo(boundary.right, boundary.top);
         mBoundaryPath.lineTo(boundary.right, boundary.bottom);
+
+        loadLevel();
+    }
+
+    private void loadLevel() {
+        mCells = new Cell[ROW_NUM][COL_NUM];
+        mCellWidth = mBoundary.width() / COL_NUM;
+        mCellHeight = mBoundary.height() / ROW_NUM;
+        Paint paint = new Paint();
+        for (int row = 0; row < 5; row++) {
+            for (int col = 0; col < COL_NUM; col++) {
+                int blood = (int) (Math.floor(Math.random() * 3));
+                Cell brick = new Brick(row, col, mCellWidth, mCellHeight, blood);
+                brick.setPaint(paint);
+                mCells[row][col] = brick;
+            }
+        }
     }
 
     public void setBall(Ball ball) {
@@ -59,16 +83,29 @@ public class Table {
     }
 
     public void draw(Canvas canvas) {
+        canvas.drawColor(Color.LTGRAY);
         if (mShowGameOver) {
             canvas.drawText("Game Over!", mBoundary.centerX() - 218, mBoundary.centerY(), mPaintGameOver);
         }
-
+        // 绘制边界
         canvas.drawPath(mBoundaryPath, mPaintBoundary);
-        int hitType = getBoundaryHitType();
-        if ((hitType & BOUNDARY_HIT_TOP) == BOUNDARY_HIT_TOP) {
+
+        // 绘制砖块
+        for (int row = 0; row < ROW_NUM; row++) {
+            for (int col = 0; col < COL_NUM; col++) {
+                Cell cell = mCells[row][col];
+                if (cell != null) {
+                    cell.draw(canvas);
+                }
+            }
+        }
+
+        // 判断球是否和边界碰撞
+        int hitType = getHitType();
+        if ((hitType & HIT_TOP) == HIT_TOP) {
             mBall.reverseYSpeed();
         }
-        if ((hitType & (BOUNDARY_HIT_LEFT | BOUNDARY_HIT_RIGHT)) > 0) {
+        if ((hitType & (HIT_LEFT | HIT_RIGHT)) > 0) {
             mBall.reverseXSpeed();
         }
         if (isBatHit()) {
@@ -92,18 +129,82 @@ public class Table {
         return false;
     }
 
-    private int getBoundaryHitType() {
-        int type = BOUNDARY_HIT_NONE;
+    private int getHitType() {
+        int type = HIT_NONE;
         Point c = mBall.getCenter();
         float r = mBall.getRadius();
-        if (mBall.isToTop() && c.y - r <= 0) {
-            type |= BOUNDARY_HIT_TOP;
+        int row = c.y / mCellHeight;
+        int col = c.x / mCellWidth;
+        Cell cell = null;
+        boolean hitCell = false;
+        Rect body = null;
+        // 判断撞头
+        if (row > 0 && row < ROW_NUM) {
+            cell = mCells[row - 1][col];
+            if (cell != null) {
+                body = cell.getBody();
+                hitCell = c.y > body.bottom && c.y - r <= body.bottom;
+                if (hitCell) {
+                    if (cell.hit()) {
+                        mCells[cell.row][cell.col] = null;
+                    }
+                }
+            }
         }
-        if (mBall.isToRight() && c.x + r >= mBoundary.right && c.y < mBoundary.bottom) {
-            type |= BOUNDARY_HIT_RIGHT;
+        if (mBall.isToTop() && (c.y - r <= 0 || hitCell)) {
+            type |= HIT_TOP;
         }
-        if (mBall.isToLeft() && c.x - r <= 0 && c.y < mBoundary.bottom) {
-            type |= BOUNDARY_HIT_LEFT;
+        // 判断撞右边
+        hitCell = false;
+        if (col < COL_NUM - 1 && row < ROW_NUM) {
+            cell = mCells[row][col + 1];
+            if (cell != null) {
+                body = cell.getBody();
+                hitCell = c.x < body.left && c.x + r >= body.left;
+                if (hitCell) {
+                    if (cell.hit()) {
+                        mCells[cell.row][cell.col] = null;
+                    }
+                }
+            }
+        }
+        if (mBall.isToRight() &&
+                (c.x + r >= mBoundary.right && c.y < mBoundary.bottom || hitCell)) {
+            type |= HIT_RIGHT;
+        }
+        // 判断撞左边
+        hitCell = false;
+        if (col > 0 && row < ROW_NUM) {
+            cell = mCells[row][col - 1];
+            if (cell != null) {
+                body = cell.getBody();
+                hitCell = c.x > body.right && c.x - r <= body.right;
+                if (hitCell) {
+                    if (cell.hit()) {
+                        mCells[cell.row][cell.col] = null;
+                    }
+                }
+            }
+        }
+        if (mBall.isToLeft() &&
+                ((c.x - r <= 0 && c.y < mBoundary.bottom) || hitCell)) {
+            type |= HIT_LEFT;
+        }
+        // 判断撞下边
+        if (row < ROW_NUM - 1) {
+            cell = mCells[row + 1][col];
+            if (cell != null) {
+                body = cell.getBody();
+                hitCell = c.y < body.top && c.y + r >= body.top;
+                if (hitCell) {
+                    if (cell.hit()) {
+                        mCells[cell.row][cell.col] = null;
+                    }
+                }
+            }
+        }
+        if (mBall.isToBottom() && hitCell) {
+            type |= HIT_BOTTOM;
         }
         return type;
     }
