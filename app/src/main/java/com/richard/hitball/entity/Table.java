@@ -25,8 +25,8 @@ public class Table {
     private static final int HIT_NONE = 0;
     private static final int HIT_TOP = 1;
     private static final int HIT_RIGHT = 2;
-    private static final int HIT_BOTTOM = 3;
-    private static final int HIT_LEFT = 4;
+    private static final int HIT_BOTTOM = 4;
+    private static final int HIT_LEFT = 8;
     private static final int ROW_NUM = 20;
     private static final int COL_NUM = 5;
     private static final float BRICK_BORDER = 5f;
