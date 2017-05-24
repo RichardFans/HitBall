@@ -92,7 +92,7 @@ public class Table {
         mCellHeight = mBoundary.height() / ROW_NUM;
         try {
             String[] filenames = mAssetManager.list("levels");
-            // TODO: 2017-05-24
+            // TODO: 应该根据关卡加载
             String filename = filenames[0];
             loadLevel(filename);
         } catch (IOException e) {
@@ -168,7 +168,7 @@ public class Table {
 
         // 判断球是否和边界碰撞
         int hitType = getHitType();
-        if ((hitType & HIT_TOP) == HIT_TOP) {
+        if ((hitType & (HIT_TOP | HIT_BOTTOM)) > 0) {
             mBall.reverseYSpeed();
         }
         if ((hitType & (HIT_LEFT | HIT_RIGHT)) > 0) {
