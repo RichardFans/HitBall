@@ -82,7 +82,9 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     public void run() {
         while (mIsRunning) {
             Canvas canvas = getHolder().lockCanvas();
-            draw(canvas);
+            synchronized (mTable) {
+                draw(canvas);
+            }
             getHolder().unlockCanvasAndPost(canvas);
             sleep(20);
         }
@@ -116,12 +118,14 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             if (mIsRunning) {
-                if (mState == STATE_READY) {
-                    mTable.shotBall();
-                    mState = STATE_PLAY;
-                } else if (mState == STATE_OVER || mState == STATE_PASS) {
-                    mState = STATE_READY;
-                    mTable.reset();
+                synchronized (mTable) {
+                    if (mState == STATE_READY) {
+                        mTable.shotBall();
+                        mState = STATE_PLAY;
+                    } else if (mState == STATE_OVER || mState == STATE_PASS) {
+                        mState = STATE_READY;
+                        mTable.reset();
+                    }
                 }
             }
             return true;

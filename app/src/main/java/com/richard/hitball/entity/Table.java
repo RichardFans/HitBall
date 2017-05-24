@@ -14,7 +14,10 @@ import android.media.SoundPool;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +48,7 @@ public class Table {
 
     private SoundPool mSoundPool;
     private List<Integer> mSounds = new ArrayList<>();
+    private AssetManager mAssetManager;
 
     public Table(Context context, Rect boundary) {
         mPaintBoundary = new Paint();
@@ -69,11 +73,11 @@ public class Table {
 
     private void loadSound(Context context) {
         mSoundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
-        AssetManager manager = context.getAssets();
+        mAssetManager = context.getAssets();
         try {
-            String[] filenames = manager.list("");
+            String[] filenames = mAssetManager.list("sounds");
             for (String filename : filenames) {
-                AssetFileDescriptor fd = manager.openFd(filename);
+                AssetFileDescriptor fd = mAssetManager.openFd("sounds/" + filename);
                 int soundId = mSoundPool.load(fd, 0);
                 mSounds.add(soundId);
             }
@@ -86,14 +90,39 @@ public class Table {
         mCells = new Cell[ROW_NUM][COL_NUM];
         mCellWidth = mBoundary.width() / COL_NUM;
         mCellHeight = mBoundary.height() / ROW_NUM;
-        Paint paint = new Paint();
-        for (int row = 0; row < 5; row++) {
-            for (int col = 0; col < COL_NUM; col++) {
-                int blood = (int) (Math.floor(Math.random() * 3));
-                Cell brick = new Brick(row, col, mCellWidth, mCellHeight, blood);
-                brick.setPaint(paint);
-                mCells[row][col] = brick;
+        try {
+            String[] filenames = mAssetManager.list("levels");
+            // TODO: 2017-05-24
+            String filename = filenames[0];
+            loadLevel(filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadLevel(String filename) {
+        try {
+            InputStream inputStream = mAssetManager.open("levels/" + filename);
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            int row = 0;
+            Paint paint = new Paint();
+            while ((line = reader.readLine()) != null) {
+                String[] cells = line.split(",");
+                for (int col = 0; col < cells.length; col++) {
+                    String cell = cells[col];
+                    if (cell.equals("x")) {
+                        int blood = (int) (Math.floor(Math.random() * 3));
+                        Cell brick = new Brick(row, col, mCellWidth, mCellHeight, blood);
+                        brick.setPaint(paint);
+                        mCells[row][col] = brick;
+                    }
+                }
+                row++;
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -289,10 +318,9 @@ public class Table {
         mBat.setBodyPosition(body);
         mBall.setPosition(mBoundary.centerX(), (int) (top - mBall.getRadius()));
         mBall.stop();
+        loadLevel();
         mShowGameOver = false;
         mShowGamePass = false;
-
-        loadLevel();
     }
 
     public void shotBall() {
