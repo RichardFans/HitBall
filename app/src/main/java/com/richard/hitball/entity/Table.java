@@ -175,7 +175,7 @@ public class Table {
         if ((hitType & (HIT_LEFT | HIT_RIGHT)) > 0) {
             mBall.reverseXSpeed();
         }
-        if (isBatHit()) {
+        if (isBatHit() && mBall.isToBottom()) {
             mBall.reverseYSpeed();
         }
         mBall.draw(canvas);
