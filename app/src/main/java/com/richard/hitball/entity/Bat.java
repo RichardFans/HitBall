@@ -9,7 +9,7 @@ import android.graphics.Rect;
 public class Bat {
     public static final int DEFAULT_WIDTH = 400;
     public static final int DEFAULT_HEIGHT = 20;
-    private static final int DEFAULT_SPEED = 20;
+    private static final int DEFAULT_SPEED = 30;
 
     private Paint mPaint;
     private Rect mBody;

@@ -49,6 +49,7 @@ public class Table {
     private SoundPool mSoundPool;
     private List<Integer> mSounds = new ArrayList<>();
     private AssetManager mAssetManager;
+    private Rect mNormalBatBody;
 
     public Table(Context context, Rect boundary) {
         mPaintBoundary = new Paint();
@@ -188,7 +189,7 @@ public class Table {
         float r = mBall.getRadius();
         Rect batBody = mBat.getBody();
         if (c.x >= batBody.left && c.x <= batBody.right) {
-            if (c.y < batBody.top && c.y + r > batBody.top) {
+            if (c.y - r < batBody.bottom && c.y + r > batBody.top) {
                 return true;
             }
         }
@@ -305,6 +306,58 @@ public class Table {
         }
     }
 
+    public void startBatMove(double roll) {
+        if (isBatMoving) {
+            if (isBatMoveToLeft) {
+                if (roll < 8 && roll > -10) {
+                    isBatMoving = false;
+                } else if (roll <= -10) {
+                    isBatMoveToLeft = true;
+                }
+            } else {
+                if (roll > -8 && roll < 10) {
+                    isBatMoving = false;
+                } else if (roll >= 10) {
+                    isBatMoveToLeft = false;
+                }
+            }
+        } else {
+            if (roll <= -10) {
+                isBatMoving = true;
+                isBatMoveToLeft = true;
+            } else if (roll >= 10) {
+                isBatMoving = true;
+                isBatMoveToLeft = false;
+            }
+        }
+    }
+
+    public void changeBatBody(double pitch) {
+        Rect body = mBat.getBody();
+        boolean wider = body.width() == mBoundary.width();
+        boolean higher = body.height() > mNormalBatBody.height();
+        if (wider) {
+            if (pitch > -25) {
+                body.left = mNormalBatBody.left;
+                body.right = mNormalBatBody.right;
+            }
+        } else {
+            if (pitch < -30) {
+                body.left = mBoundary.left;
+                body.right = mBoundary.right;
+            }
+        }
+        if (higher) {
+            if (pitch < 10) {
+                body.top = mNormalBatBody.top;
+            }
+        } else {
+            if (pitch > 15) {
+                body.top = body.bottom - 10 * body.height();
+            }
+        }
+    }
+
     public void stopBatMove() {
         isBatMoving = false;
     }
@@ -315,6 +368,7 @@ public class Table {
         int right = mBoundary.centerX() + mBat.getWidth() / 2;
         int bottom = mBoundary.bottom;
         Rect body = new Rect(left, top, right, bottom);
+        mNormalBatBody = new Rect(body);
         mBat.setBodyPosition(body);
         mBall.setPosition(mBoundary.centerX(), (int) (top - mBall.getRadius()));
         mBall.stop();
